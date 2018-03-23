@@ -87,6 +87,15 @@ class green_house():
         # Plot first 5000 samples of temperature.
         plt.plot(greenhouse_df.index[:5000], greenhouse_df.temperature[:5000])
         plt.show()
+        # Plot evapotranspiration.
+        plt.plot(greenhouse_df.index, greenhouse_df[' EV24'])
+        plt.show()
+        # Plot rainfall.
+        plt.plot(greenhouse_df.index, greenhouse_df['   RH'])
+        plt.show()
+        # Plot sunshine duration.
+        plt.plot(greenhouse_df.index, greenhouse_df['   SQ'])
+        plt.show()
         return df, greenhouse_df
     
     def growing_degree_days(self, daily_max_temp=20):
@@ -113,7 +122,9 @@ class green_house():
                 
             else:
                 self.gdd += self.daily_max_temp - self.base_temp
-    
+        
+        return self.gdd
+        
     def water_storage_usage(self, daily_rainfall=10, tank_size=100, irrigation=True, irrigation_rate=2):
         '''
         Calculates water level in the rainwater tank along with usage of water
@@ -138,18 +149,46 @@ class green_house():
         if irrigation:
             self.water_supply -= self.irrigation_rate
     
+        return self.water_supply
+        
     def greenhouse_temperature(self):
         '''
         Calculates the temperature in a greenhouse by hour based on daily temperature
         values.
         '''
+        # Find a greenhouse temperature function.
+        self.greenhouse_temp = 0
+        return self.greenhouse_temp
+    
+    def soil_water_content(self):
+        '''
+        Calculates the soil water content in the greenhouse 
+        '''
         pass
+        self.wilting_capacity = 0
+        self.soil_water = 0
+        self.soil_saturation = 0
+        return self.soil_water
     
-    
-    
-    
-    
-    
+    def greenhouse_control(self, vents=True):
+        '''
+        Controls opening and closing of vents, turning on of irrigation etc.
+        '''
+        self.vents = vents
+        if self.greenhouse_temp > self.max_temp:
+            self.vents=True
+        else:
+            self.vents=False
+            
+        if self.soil_water_content() < self.wilting_capacity:
+            self.irrigation = True
+            
+        elif self.soil_water_content() > self.soil_saturation:
+            self.irrigation = False
+            
+        else:
+            self.irrigation_rate -= 0.5 # Per hour
+           
     
 x = green_house()
 df, greenhouse  = x.set_up_data()
