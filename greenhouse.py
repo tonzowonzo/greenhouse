@@ -16,10 +16,32 @@ class green_house():
     gdd, production and minimise resource usage.
     '''       
     def __init__(self, crop='cucumber', fert=True, pest=True, area=200):
+        
+        # Type of crop.
         self.crop = crop
+        # Use fertiliser.
         self.fert = fert
+        # Use pesticide.
         self.pest = pest
+        # Square area of the greenhouse.
         self.area = 200
+        # Temperature outside the greenhouse
+        self.outside_temp = 0
+        # Current growing degree day count.
+        self.gdd = 0
+        # Max temperature of the day.
+        self.daily_max_temp = 0
+        # Current temperature inside the greenhouse.
+        self.current_temperature = 0
+        # Is the sun out?
+        self.is_sunny = True
+        # gdd requirement for cucumbers
+        if crop == 'cucumber':
+            self.base_temp = 15.5
+            self.max_temp = 32
+            self.gdd_req = 482
+            
+
         
     def set_up_data(self, dataset='weather_data.csv'):
         '''
@@ -48,11 +70,11 @@ class green_house():
                                                                  freq='H'),
                                                                  'temperature': np.nan})
         greenhouse_df_max_temp = pd.DataFrame({'datetimes': pd.date_range('2010-3-01T15:00:00.000Z',
-                                                                 '2017-10-29T00:00:00.000Z',
+                                                                 '2016-03-02T00:00:00.000Z',
                                                                  freq='D'),
                                                'temperature': df['   TX']})
         greenhouse_df_min_temp = pd.DataFrame({'datetimes': pd.date_range('2010-3-01T06:00:00.000Z',
-                                                                 '2017-10-29T00:00:00.000Z',
+                                                                 '2016-03-02T00:00:00.000Z',
                                                                  freq='D'),
                                                'temperature': df['   TN']})
         # Then we can join on date.
@@ -78,8 +100,15 @@ class green_house():
         greenhouse_df = greenhouse_df.copy()
         greenhouse_df = greenhouse_df.merge(df, left_index=True,
                                             right_index=True, how='left')
+        
+        # Remove spaces in cloud cover rows.
+        greenhouse_df = greenhouse_df.replace(to_replace='     ', value=np.nan)
+        # Turn cloud cover values to float for transformation.
+        greenhouse_df['   NG'] = greenhouse_df['   NG'].astype(float)
         # Fill in NaN values with interpolate
         greenhouse_df = greenhouse_df.interpolate(method='linear')
+        
+
         
         # Plot new temp values with time
         plt.plot(greenhouse_df.index, greenhouse_df.temperature)
@@ -87,15 +116,15 @@ class green_house():
         # Plot first 5000 samples of temperature.
         plt.plot(greenhouse_df.index[:5000], greenhouse_df.temperature[:5000])
         plt.show()
-        # Plot evapotranspiration.
-        plt.plot(greenhouse_df.index, greenhouse_df[' EV24'])
-        plt.show()
         # Plot rainfall.
         plt.plot(greenhouse_df.index, greenhouse_df['   RH'])
         plt.show()
         # Plot sunshine duration.
         plt.plot(greenhouse_df.index, greenhouse_df['   SQ'])
         plt.show()
+        # Remove final NaN rows.
+        greenhouse_df = greenhouse_df.dropna()
+        
         return df, greenhouse_df
     
     def growing_degree_days(self, daily_max_temp=20):
@@ -107,12 +136,7 @@ class green_house():
             gdd requirement for cucumbers from:
             http://nwhortsoc.com/wp-content/uploads/2016/01/Andrews-Croptime-1.pdf,
             adjusted to 900 for current formula with max temperature
-            '''
-            self.base_temp = 15.5
-            self.max_temp = 32
-            self.gdd_req = 482
-            self.daily_max_temp = daily_max_temp
-            self.gdd = 0
+            '''           
             
             if self.daily_max_temp >= self.max_temp:
                 self.gdd += (self.max_temp - (self.daily_max_temp - self.max_temp)) - self.base_temp
@@ -164,30 +188,78 @@ class green_house():
         '''
         Calculates the soil water content in the greenhouse 
         '''
-        pass
         self.wilting_capacity = 0
         self.soil_water = 0
         self.soil_saturation = 0
         return self.soil_water
     
-    def greenhouse_control(self, vents=True):
+    def greenhouse_control_evaluation(self):
         '''
         Controls opening and closing of vents, turning on of irrigation etc.
         '''
-        self.vents = vents
-        if self.greenhouse_temp > self.max_temp:
-            self.vents=True
+        if nn_val >= vent_threshold:            
+            self.vents = True
         else:
-            self.vents=False
+            self.vents = False
+        
+        if nn_val >= heating_threshold:
+            self.heating = True
+        else:
+            self.heating = False
             
-        if self.soil_water_content() < self.wilting_capacity:
-            self.irrigation = True
+        if nn_val >= screen_threshold:
+            self.screens = True
+        else:
+            self.screens = False
             
-        elif self.soil_water_content() > self.soil_saturation:
+        if nn_val >= lighting_threshold:
+            self.lighting = True
+        else:
+            self.lighting = False
+        
+        if nn_val >= fogging_threshold:
+            self.fogging = True
+        else:
+            self.fogging = False
+            
+        if nn_val >= irrigation_threshold:
+            self.irigation = True
+        else:
             self.irrigation = False
             
+        if nn_val >= carbon_dioxide_threshold:
+            self.carbon_dioxide_input = True
         else:
-            self.irrigation_rate -= 0.5 # Per hour
+            self.carbon_dioxide_input = False
+            
+    def vent_effect(self):
+        '''
+        Effect of vents being opened or closed on the temperature within the
+        greenhouse.
+        '''
+        if self.vents:
+            if self.current_temperature >= self.outside_temp and self.is_sunny:
+                self.current_temperature = self.current_temperature
+            elif self.current_temperature >= self.outside_temp and not self.is_sunny:
+                self.current_temperature -= 1
+        
+        else:
+            if self.is_sunny:
+                self.current_temperature += 3
+            else:
+                self.current_temperature += 1
+                
+    def heating_effect(self):
+        '''
+        Effect of heating being on or off on the temperature within the
+        greenhouse.
+        '''
+        if self.heating:
+            if self.is_sunny:
+                self.current_temperature += 1
+                
+        
+        
            
     
 x = green_house()
