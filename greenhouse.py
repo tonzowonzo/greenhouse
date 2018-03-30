@@ -107,7 +107,8 @@ class green_house():
         greenhouse_df['   NG'] = greenhouse_df['   NG'].astype(float)
         # Fill in NaN values with interpolate
         greenhouse_df = greenhouse_df.interpolate(method='linear')
-        
+        # Compute average temperature over last 5 hours.
+        greenhouse_df['5_hour_temp_avg'] = pd.rolling_mean(greenhouse_df['temperature'], window=5, min_periods=1)
 
         
         # Plot new temp values with time
@@ -123,7 +124,7 @@ class green_house():
         plt.plot(greenhouse_df.index, greenhouse_df['   SQ'])
         plt.show()
         # Remove final NaN rows.
-        greenhouse_df = greenhouse_df.dropna()
+        self.greenhouse_df = greenhouse_df.dropna()
         
         return df, greenhouse_df
     
@@ -197,37 +198,46 @@ class green_house():
         '''
         Controls opening and closing of vents, turning on of irrigation etc.
         '''
-        if nn_val >= vent_threshold:            
+        self.nn_val = 1
+        self.vent_threshold = 0
+        self.heating_threshold = 0
+        self.screen_threshold = 0
+        self.lighting_threshold = 0
+        self.fogging_threshold = 0
+        self.carbon_dioxide_threshold = 0
+        self.irrigation_threshold = 0
+
+        if self.nn_val >= self.vent_threshold:            
             self.vents = True
         else:
             self.vents = False
         
-        if nn_val >= heating_threshold:
+        if self.nn_val >= self.heating_threshold:
             self.heating = True
         else:
             self.heating = False
             
-        if nn_val >= screen_threshold:
+        if self.nn_val >= self.screen_threshold:
             self.screens = True
         else:
             self.screens = False
             
-        if nn_val >= lighting_threshold:
+        if self.nn_val >= self.lighting_threshold:
             self.lighting = True
         else:
             self.lighting = False
         
-        if nn_val >= fogging_threshold:
+        if self.nn_val >= self.fogging_threshold:
             self.fogging = True
         else:
             self.fogging = False
             
-        if nn_val >= irrigation_threshold:
+        if self.nn_val >= self.irrigation_threshold:
             self.irigation = True
         else:
             self.irrigation = False
             
-        if nn_val >= carbon_dioxide_threshold:
+        if self.nn_val >= self.carbon_dioxide_threshold:
             self.carbon_dioxide_input = True
         else:
             self.carbon_dioxide_input = False
@@ -239,15 +249,16 @@ class green_house():
         '''
         if self.vents:
             if self.current_temperature >= self.outside_temp and self.is_sunny:
-                self.current_temperature = self.current_temperature
+                self.vent_temperature_effect = self.vent_temperature_effect
             elif self.current_temperature >= self.outside_temp and not self.is_sunny:
-                self.current_temperature -= 1
+                self.vent_temperature_effect -= 1
         
         else:
             if self.is_sunny:
-                self.current_temperature += 3
+                self.vent_temperature_effect += 3
             else:
-                self.current_temperature += 1
+                self.vent_temperature_effect += 1
+        return self.vent_temperature_effect
                 
     def heating_effect(self):
         '''
@@ -256,11 +267,67 @@ class green_house():
         '''
         if self.heating:
             if self.is_sunny:
-                self.current_temperature += 1
+                self.heating_temperature += 1
+        return self.heating_temperature
                 
-        
-        
-           
+    def screen_effect(self):
+        '''
+        Effect of the screens being up or down on the greenhouse.
+        '''
+        if self.screens:
+            self.is_photosynthesizing = False
+            self.insulation = 0.5 # 0.5 * heat loss from inside / heat gain from outside.
+        else:
+            self.insulation = 1.0
+
+        return self.insulation
+
+    def lighting_effect(self):
+        '''
+        The effect that lighting has on plant growth in the greenhouse.
+        '''
+        if lighting:
+            self.is_photosynthesizing = True
+
+    def fogging_effect(self):
+        '''
+        The effect fogging has on plant growth.
+        '''
+        pass
+
+    def irrigation_effect(self):
+        '''
+
+        '''
+        pass
+
+    def carbon_input_effect(self):
+        '''
+
+        '''
+        if self.carbon_dioxide_input:
+            self.photosynthesis_rate *= 1.1
+
+    def calculate_greenhouse_temperature(self):
+        '''
+        Calculates the temperature in the greenhouse based on outside and controlled factors.
+        '''
+        self.greenhouse_df['greenhouse_temperature'] = self.greenhouse_df['5_hour_temp_avg'] + ((self.vent_effect() + self.heating_effect()) * self.screen_effect())
+        return self.greenhouse_df
+
+    def calculate_greenhouse_production(self):
+        pass
+
+    def calculate_reward(self):
+        pass
+
+    def DeepQNetwork(self):
+        pass
     
 x = green_house()
 df, greenhouse  = x.set_up_data()
+print(greenhouse['5_hour_temp_avg'])
+x.greenhouse_control_evaluation()
+temps = x.calculate_greenhouse_temperature()
+print(temps['greenhouse_temperature'])
+plt.plot(temps['greenhouse_temperature'])
