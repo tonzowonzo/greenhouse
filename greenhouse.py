@@ -2,11 +2,13 @@
 # Import libraries
 import numpy as np
 import pandas as pd
-import sklearn
 import matplotlib.pyplot as plt
 # Import standard libraries.
 import os
 import datetime
+
+# Set pandas options.
+pd.options.mode.chained_assignment = None
 # Set cwd
 os.chdir(r'C:/Users/Tim/pythonscripts/Greenhouse')
 
@@ -35,6 +37,10 @@ class green_house():
         self.current_temperature = 0
         # Is the sun out?
         self.is_sunny = True
+        # Vent temperature effect.
+        self.vent_temperature_effect = 0
+        # Heating effect.
+        self.heating_temperature = 0
         # gdd requirement for cucumbers
         if crop == 'cucumber':
             self.base_temp = 15.5
@@ -198,14 +204,14 @@ class green_house():
         '''
         Controls opening and closing of vents, turning on of irrigation etc.
         '''
-        self.nn_val = 1
-        self.vent_threshold = 0
-        self.heating_threshold = 0
-        self.screen_threshold = 0
-        self.lighting_threshold = 0
-        self.fogging_threshold = 0
-        self.carbon_dioxide_threshold = 0
-        self.irrigation_threshold = 0
+        self.nn_val = 0
+        self.vent_threshold = 0.5
+        self.heating_threshold = 0.5
+        self.screen_threshold = 0.5
+        self.lighting_threshold = 0.5
+        self.fogging_threshold = 0.5
+        self.carbon_dioxide_threshold = 0.5
+        self.irrigation_threshold = 0.5
 
         if self.nn_val >= self.vent_threshold:            
             self.vents = True
@@ -251,7 +257,7 @@ class green_house():
             if self.current_temperature >= self.outside_temp and self.is_sunny:
                 self.vent_temperature_effect = self.vent_temperature_effect
             elif self.current_temperature >= self.outside_temp and not self.is_sunny:
-                self.vent_temperature_effect -= 1
+                self.vent_temperature_effect -= 3
         
         else:
             if self.is_sunny:
@@ -266,8 +272,10 @@ class green_house():
         greenhouse.
         '''
         if self.heating:
-            if self.is_sunny:
-                self.heating_temperature += 1
+            self.heating_temperature += 1
+        else:
+            self.heating_temperature = 0
+
         return self.heating_temperature
                 
     def screen_effect(self):
@@ -286,7 +294,7 @@ class green_house():
         '''
         The effect that lighting has on plant growth in the greenhouse.
         '''
-        if lighting:
+        if self.lighting:
             self.is_photosynthesizing = True
 
     def fogging_effect(self):
@@ -312,7 +320,20 @@ class green_house():
         '''
         Calculates the temperature in the greenhouse based on outside and controlled factors.
         '''
-        self.greenhouse_df['greenhouse_temperature'] = self.greenhouse_df['5_hour_temp_avg'] + ((self.vent_effect() + self.heating_effect()) * self.screen_effect())
+        self.greenhouse_df['greenhouse_temperature'] = 0
+        
+        for i, value in enumerate(self.greenhouse_df.index):
+            # Set the threshold value.
+            self.nn_val = np.random.uniform(0, 1)
+            if i % 10000 == 0:
+                print(self.heating_effect(), self.screen_effect(), self.vent_effect())
+
+            if i == 0:
+                self.greenhouse_df['greenhouse_temperature'][value] = self.greenhouse_df['5_hour_temp_avg'][value] + ((self.vent_effect() + self.heating_effect()) * self.screen_effect())
+            else:
+                self.greenhouse_df['greenhouse_temperature'][i] =((self.greenhouse_df['greenhouse_temperature'][i - 1] + self.greenhouse_df['5_hour_temp_avg'][i]) / 2) + (self.vent_effect() + \
+                self.heating_effect()) * self.screen_effect()
+
         return self.greenhouse_df
 
     def calculate_greenhouse_production(self):
