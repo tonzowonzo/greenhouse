@@ -1,4 +1,4 @@
-### Autonomous greenhouse simulation.
+#### Autonomous greenhouse simulation.
 # Project goal
 The goal of this project is to autonomously control a simulated greenhouse using reinforcement learning techniques. The greenhouse has several factors which can be controlled, this includes:
   1. Vents
