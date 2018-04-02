@@ -15,10 +15,14 @@ The reward function includes both the resources used and the average time taken 
 # Random policy
 Firstly a completely random policy. This controls the greenhouse via a random uniform distribution. It fluctuates a large amount and follows the general outside temperature, it can get both extremely hot and cold in this greenhouse, in reality all of the plants would die.
 The reward given to this was -8500.
+
 ![Random temperatures](https://github.com/tonzowonzo/greenhouse/blob/master/images/randomtemps.png)
+
 ![Random harvest times](https://github.com/tonzowonzo/greenhouse/blob/master/images/randomgdd.png)
 
 # Naive policy
 Secondly a naive policy. This opens the vents, closes the screens and turns on fogging when it is too hot and turns on heaters and opens the screens while it is too cold. It performs significantly better than the above with a reward value of -3800.
+
 ![Naive temperatures](https://github.com/tonzowonzo/greenhouse/blob/master/images/naivetemps.png)
+
 ![Naive harvest times](https://github.com/tonzowonzo/greenhouse/blob/master/images/naivegdd.png)
