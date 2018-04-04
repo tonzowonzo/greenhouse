@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import tensorflow as tf
 # Plot style.
 plt.style.use(['ggplot', 'dark_background'])
 # Import standard libraries.
@@ -337,7 +338,7 @@ class green_house():
         '''
         if self.carbon_dioxide_input:
             self.photosynthesis_rate *= 1.1
-
+        
     def calculate_greenhouse_temperature(self, policy='basic'):
         '''
         Calculates the temperature in the greenhouse based on outside and controlled factors.
@@ -473,6 +474,27 @@ class green_house():
     def DeepQNetwork(self):
         pass
     
+    def simple_neural_net(self):
+        '''
+        A simple neural net to optimise the reward function.
+        '''
+        # Outside and inside temperature.
+        n_inputs = 2
+        n_hidden = 8
+        # Fogging, screens, heating and vents.
+        n_outputs = 4
+        learning_rate = 0.01
+        
+        initializer = tf.contrib.layers.variance_scaling_initializer()
+        X = tf.placeholder(tf.float32, shape=[None, n_inputs])
+        y = tf.placeholder(tf.float32, shape=[None, n_outputs])
+        
+        # Network creation.
+        hidden = tf.layers.dense(X, n_hidden, activation=tf.nn.relu, kernel_initializer=initializer)
+        logits = tf.layers.dense(hidden, n_outputs)
+        outputs = tf.nn.sigmoid(logits)
+        p_on_or_off = tf.concat(axis=1, values=[outputs])
+        
 x = green_house()
 df, greenhouse  = x.set_up_data()
 print(greenhouse['5_hour_temp_avg'])
