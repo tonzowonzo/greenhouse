@@ -11,7 +11,7 @@ The goal of this project is to autonomously control a simulated greenhouse using
 ## Reward function
 The reward function includes both the resources used and the average time taken over 5 years per harvest. The best possible value is 0 however in practice this is impossible as it would mean instantanious growth with no resource use.
 
-    **= -mean(harvest_times) - resources_used/amount_of_harvests**
+    = -mean(harvest_times) - resources_used/amount_of_harvests
 ## Policies
 ### Random policy
 Firstly a completely random policy. This controls the greenhouse via a random uniform distribution. It fluctuates a large amount and follows the general outside temperature, it can get both extremely hot and cold in this greenhouse, in reality all of the plants would die.
