@@ -9,6 +9,9 @@ plt.style.use(['ggplot', 'dark_background'])
 # Import standard libraries.
 import os
 import datetime
+# Libraries for DeepQ.
+from keras.models import Sequential
+from keras.layers import Dense, Flatten
 
 # Set pandas options.
 pd.options.mode.chained_assignment = None
@@ -472,7 +475,14 @@ class green_house():
         return -np.mean(self.harvest_times) - self.resources_used/len(self.harvest_times)
 
     def DeepQNetwork(self):
-        pass
+        '''
+        A deep q algorithm for controlling greenhouse to optimise reward function.
+        '''
+        observation = 0 # Temperature from the greenhouse df.
+        state = 0 # Temperature of the inside of the greenhouse.
+        done = False
+        
+        
     
     def simple_neural_net(self):
         '''
