@@ -482,6 +482,8 @@ class green_house():
         state = 0 # Temperature of the inside of the greenhouse.
         done = False
         
+        # Deep Q architecture
+        
         
     
     def simple_neural_net(self):
