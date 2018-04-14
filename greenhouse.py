@@ -482,8 +482,14 @@ class green_house():
         state = 0 # Temperature of the inside of the greenhouse.
         done = False
         
-        # Deep Q architecture
-        
+        # Build model
+        model = Sequential()
+        model.add(Dense(20, shape=(1,), init='uniform', activation='relu'))
+        model.add(Dense(40, init='uniform', activation='relu'))
+        model.add(Dense(40, init='uniform', activation='relu'))
+        # Output is a probabality of making each action.
+        model.add(Dense(4, init='uniform', activation='sigmoid'))
+        model.compile(loss=self.loss_func, optimizer='adam', metrics=[self.loss_func])
         
     
     def simple_neural_net(self):
