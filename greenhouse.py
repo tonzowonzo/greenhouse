@@ -70,6 +70,7 @@ class green_house():
             self.base_temp = 15.5
             self.max_temp = 28
             self.too_hot = 36
+            self.target = self.max_temp
             # gdds turned into hours required. (Growing degree hours).
             self.gdd_req = 11568
         
@@ -473,15 +474,24 @@ class green_house():
         score albiet impossible, the closer to 0 the better.
         '''
         return -np.mean(self.harvest_times) - self.resources_used/len(self.harvest_times)
-
+    
+    def single_time_step_reward(self):
+        pass
+    
+    def action(self):
+        pass
+    
+    def next_state(self):
+        self.observation = self.calculate_greenhouse_temperature() # Need separate func for calcing single step.
+    
     def DeepQNetwork(self):
         '''
         A deep q algorithm for controlling greenhouse to optimise reward function.
         '''
-        observation = 0 # Temperature from the greenhouse df.
-        state = 0 # Temperature of the inside of the greenhouse.
-        done = False
-        
+        self.observation = 0 # Temperature from the greenhouse df.
+        self.state = 0 # Temperature of the inside of the greenhouse.
+        self.done = False
+        self.output = np.zeros(4)
         # Build model
         model = Sequential()
         model.add(Dense(20, shape=(1,), init='uniform', activation='relu'))
@@ -489,7 +499,7 @@ class green_house():
         model.add(Dense(40, init='uniform', activation='relu'))
         # Output is a probabality of making each action.
         model.add(Dense(4, init='uniform', activation='sigmoid'))
-        model.compile(loss=self.loss_func, optimizer='adam', metrics=[self.loss_func])
+        model.compile(loss='mse', optimizer='adam', metrics=[self.loss_func])
         
     
     def simple_neural_net(self):
